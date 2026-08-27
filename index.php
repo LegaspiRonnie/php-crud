@@ -1,6 +1,6 @@
 <?php
 require_once('./db.php');
-session_start();
+require_once('./session.php');
 $products = [];
 $escape = static fn($value): string => htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
 $image_path = 'uploads/images/';

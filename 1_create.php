@@ -1,6 +1,6 @@
 <?php
 require_once('./db.php');
-session_start();
+require_once('./session.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name             = $_POST['name'] ?? '';
@@ -13,8 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($image && $image['error'] !== UPLOAD_ERR_NO_FILE) {
         if ($image['error'] !== UPLOAD_ERR_OK) {
-            $_SESSION['status'] = 'error';
-            $_SESSION['message'] = 'There is an error in your image file';
+            getStatus('error', 'There is an error in your image file');
             header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect bago mag-exit para hindi maging blangko ang screen
             exit;
         }
@@ -22,15 +21,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $image_ext = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
         $allowed_image = ['jpg', 'png', 'jpeg'];
         if (!in_array($image_ext, $allowed_image, true)) {
-            $_SESSION['status'] = 'error';
-            $_SESSION['message'] = 'Image type not allowed; upload only JPG, JPEG, or PNG';
+            getStatus('error', 'Image type not allowed; upload only JPG, JPEG, or PNG');
             header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect bago mag-exit para hindi maging blangko ang screen
             exit;
         }
 
         if ($image['size'] > 1000001) {
-            $_SESSION['status'] = 'error';
-            $_SESSION['message'] = 'Image size too large';
+            getStatus('error', 'Image size too large');
             header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect bago mag-exit para hindi maging blangko ang screen
             exit;
         }
@@ -47,32 +44,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     if($name == '') {
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Name is required';
+        getStatus('error', 'Name is required');
         header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect bago mag-exit para hindi maging blangko ang screen
         exit;
     }
     if($price == '') {
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Price is required';
+        getStatus('error', 'Price is required');
         header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect
         exit;
     }
     if(!is_numeric($price)) {
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Price must be a valid number';
+        getStatus('error', 'Price must be a valid number');
         header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect
         exit;
     }
     if($quantity == '') {
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Quantity is required'; // REPLACED: Inayos ang typo mula 'Quntity' tungo sa 'Quantity'
+        getStatus('error', 'Quantity is required');
         header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect
         exit;
     }
     if(!is_numeric($quantity)) {
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Quantity must be a valid number';
+        getStatus('error', 'Quantity must be a valid number');
         header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect
         exit;
     }
@@ -93,20 +85,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("sssdi", $image_new_name , $name, $description, $price, $quantity);
         
         if($stmt->execute()){
-            $_SESSION['status'] = 'success';
-            $_SESSION['message'] = "Product Created Successfully";
+            getStatus('success', 'Product Created Successfully');
             header("Location: index.php"); // REPLACED: Nagdagdag ng redirect para makita ang success message sa form
             exit;
         } else {
-            $_SESSION['status'] = 'error';
-            $_SESSION['message'] = "Can't add product";
+            getStatus('error', "Can't add product");
             header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Mas magandang itago sa session ang error kaysa mag-echo lang
             exit;
         }
        
     } catch (Exception $e) {
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = "Can't create Product";
+        getStatus('error', "Can't create Product");
         header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect
         exit;
     }

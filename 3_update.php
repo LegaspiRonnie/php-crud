@@ -1,6 +1,6 @@
 <?php
 require_once('./db.php');
-session_start();
+require_once('./session.php');
 
 /* 
    REPLACED: Binago ang pagkuha ng ID. 
@@ -17,16 +17,14 @@ if (isset($_GET['id'])) {
 
 // Validation para sa ID (Tatakbo pareho sa GET at POST)
 if($id === '') {
-    $_SESSION['status'] = 'error';
-    $_SESSION['message'] = 'ID is required';
+    getStatus('error', 'ID is required');
     // REPLACED: Inalis ang auto-redirect dito upang maiwasan ang infinite loop kapag nag-error ang ID habang walang form
     echo "Error: ID is required.";
     exit;
 }
 
 if(!is_numeric($id) || (int)$id <= 0) { // REPLACED: Pinagsama ang numeric at positive validation
-    $_SESSION['status'] = 'error';
-    $_SESSION['message'] = 'Id must be a valid positive number';
+    getStatus('error', 'Id must be a valid positive number');
     echo "Error: Invalid ID.";
     exit;
 }
@@ -42,8 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $result = $stmt->get_result();
 
     if($result->num_rows === 0) { // REPLACED: Inayos ang lohika mula `!$result->num_rows > 0` tungo sa `=== 0`
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Product could not be found';
+        getStatus('error', 'Product could not be found');
         echo "Product not found.";
         exit;
     }
@@ -65,8 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     if ($image && $image['error'] !== UPLOAD_ERR_NO_FILE) {
         if ($image['error'] !== UPLOAD_ERR_OK) {
-            $_SESSION['status'] = 'error';
-            $_SESSION['message'] = 'There is an error in your image file';
+            getStatus('error', 'There is an error in your image file');
             header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect bago mag-exit para hindi maging blangko ang screen
             exit;
         }
@@ -74,15 +70,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $image_ext = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
         $allowed_image = ['jpg', 'png', 'jpeg'];
         if (!in_array($image_ext, $allowed_image, true)) {
-            $_SESSION['status'] = 'error';
-            $_SESSION['message'] = 'Image type not allowed; upload only JPG, JPEG, or PNG';
+            getStatus('error', 'Image type not allowed; upload only JPG, JPEG, or PNG');
             header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect bago mag-exit para hindi maging blangko ang screen
             exit;
         }
 
         if ($image['size'] > 1000001) {
-            $_SESSION['status'] = 'error';
-            $_SESSION['message'] = 'Image size too large';
+            getStatus('error', 'Image size too large');
             header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect bago mag-exit para hindi maging blangko ang screen
             exit;
         }
@@ -90,40 +84,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $image_new_name = uniqid('', true) . '.' . $image_ext;
         $image_destination = 'uploads/images/' . $image_new_name;
         if (!move_uploaded_file($image['tmp_name'], $image_destination)) {
-            $_SESSION['status'] = 'error';
-            $_SESSION['message'] = 'Image could not be uploaded';
+            getStatus('error', 'Image could not be uploaded');
             header("Location: " . $_SERVER['PHP_SELF'] . "?id=" . $id);
             exit;
         }
     }
 
     if($name === '') {
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Name is required';
+        getStatus('error', 'Name is required');
         header("Location: " . $_SERVER['PHP_SELF'] . "?id=" . $id); // REPLACED: Idinagdag ang ?id=$id sa redirect
         exit;
     }
     if($price === '') {
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Price is required';
+        getStatus('error', 'Price is required');
         header("Location: " . $_SERVER['PHP_SELF'] . "?id=" . $id);
         exit;
     }
     if(!is_numeric($price)) {
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Price must be a valid number';
+        getStatus('error', 'Price must be a valid number');
         header("Location: " . $_SERVER['PHP_SELF'] . "?id=" . $id);
         exit;
     }
     if($quantity === '') {
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Quantity is required'; // REPLACED: Inayos ang maling text mula 'Id is required' tungo sa 'Quantity is required'
+        getStatus('error', 'Quantity is required');
         header("Location: " . $_SERVER['PHP_SELF'] . "?id=" . $id);
         exit;
     }
     if(!is_numeric($quantity)) {
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Quantity must be a valid number';
+        getStatus('error', 'Quantity must be a valid number');
         header("Location: " . $_SERVER['PHP_SELF'] . "?id=" . $id);
         exit;
     }
@@ -136,8 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $stmt->bind_param("sssdii", $image_new_name, $name, $description, $price, $quantity, $id);
     
     if($stmt->execute()) { // REPLACED: Dapat ang `$stmt->execute()` ang suriin, hindi ang `$stmt` object mismo
-        $_SESSION['status'] = 'success';
-        $_SESSION['message'] = "Product updated successfully";
+        getStatus('success', 'Product updated successfully');
         header("Location: index.php"); // REPLACED: Nag-redirect pagkatapos mag-update para ma-refresh ang form data
         exit;
     } else {

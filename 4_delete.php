@@ -1,17 +1,15 @@
 <?php
 require_once('./db.php');
-session_start();
+require_once('./session.php');
 if($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['id'] ?? '';
     if($id === '') {
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'ID is required';
+        getStatus('error', 'ID is required');
         header('Location: index.php');
         exit;
     }
     if(!is_numeric($id) || (int)$id < 0) {
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'ID must be a valid positive number';
+        getStatus('error', 'ID must be a valid positive number');
         header('Location: index.php');
         exit;
     }
@@ -22,13 +20,11 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
     //bind parameters
     $stmt->bind_param('i', $id);
     if($stmt->execute()) {
-        $_SESSION['status'] = 'success';
-        $_SESSION['message'] = 'product deleted successfully!';
+        getStatus('success', 'product deleted successfully!');
         header('Location: index.php');
         exit;
     } else {
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Cant delete product!';
+        getStatus('error', 'Cant delete product!');
         header('Location: index.php');
         exit;
     }

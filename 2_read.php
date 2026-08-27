@@ -1,13 +1,12 @@
 <?php
 require_once('./db.php');
-session_start();
+require_once('./session.php');
 if($_SERVER['REQUEST_METHOD'] === 'GET') {
     
     $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?? null;
     if($id === null || $id === false || $id <= 0) {
         http_response_code(400);
-        $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Id must be a valid number';
+        getStatus('error', 'Id must be a valid number');
     } else {
         //make query for getting all the data of all products
         $sql = "SELECT * FROM php_crud_products WHERE id = ?";
@@ -21,8 +20,7 @@ if($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         if ($result->num_rows === 0) {
             http_response_code(404);
-            $_SESSION['status'] = 'error';
-            $_SESSION['message'] = 'Product ID does not exist';
+            getStatus('error', 'Product ID does not exist');
         } else {
             while ($row = $result->fetch_assoc()) {
                 // put table datas
