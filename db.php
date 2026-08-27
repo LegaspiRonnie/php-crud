@@ -22,4 +22,4 @@ if ($conn->connect_error) {
     echo "cant connect to the database";
     exit;
 }
-echo "connected";
+// echo "connected";
