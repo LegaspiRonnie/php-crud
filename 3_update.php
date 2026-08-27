@@ -8,6 +8,7 @@ session_start();
    o galing sa $_POST (kapag isinubmit na ang form).
 */
 $id = '';
+$image_path = 'uploads/images/';
 if (isset($_GET['id'])) {
     $id = trim($_GET['id']);
 } elseif (isset($_POST['id'])) {
@@ -49,11 +50,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // REPLACED: Inayos ang pagkakasunod-sunod ng ?? at trim para hindi mag-error ang trim kung null ang $_POST key
-    $image       = isset($_POST['image']) ? trim($_POST['image']) : '';
     $name        = isset($_POST['name']) ? trim($_POST['name']) : '';
     $description = isset($_POST['description']) ? trim($_POST['description']) : '';
     $price       = isset($_POST['price']) ? trim($_POST['price']) : '';
     $quantity    = isset($_POST['quantity']) ? trim($_POST['quantity']) : '';
+    $image = $_FILES['image'] ?? null;
+    $image_new_name = null;
+
+    $current_stmt = $conn->prepare("SELECT image FROM php_crud_products WHERE id = ?");
+    $current_stmt->bind_param('i', $id);
+    $current_stmt->execute();
+    $current_product = $current_stmt->get_result()->fetch_assoc();
+    $image_new_name = $current_product['image'] ?? null;
+
+    if ($image && $image['error'] !== UPLOAD_ERR_NO_FILE) {
+        if ($image['error'] !== UPLOAD_ERR_OK) {
+            $_SESSION['status'] = 'error';
+            $_SESSION['message'] = 'There is an error in your image file';
+            header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect bago mag-exit para hindi maging blangko ang screen
+            exit;
+        }
+
+        $image_ext = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
+        $allowed_image = ['jpg', 'png', 'jpeg'];
+        if (!in_array($image_ext, $allowed_image, true)) {
+            $_SESSION['status'] = 'error';
+            $_SESSION['message'] = 'Image type not allowed; upload only JPG, JPEG, or PNG';
+            header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect bago mag-exit para hindi maging blangko ang screen
+            exit;
+        }
+
+        if ($image['size'] > 1000001) {
+            $_SESSION['status'] = 'error';
+            $_SESSION['message'] = 'Image size too large';
+            header("Location: " . $_SERVER['PHP_SELF']); // REPLACED: Nagdagdag ng redirect bago mag-exit para hindi maging blangko ang screen
+            exit;
+        }
+
+        $image_new_name = uniqid('', true) . '.' . $image_ext;
+        $image_destination = 'uploads/images/' . $image_new_name;
+        if (!move_uploaded_file($image['tmp_name'], $image_destination)) {
+            $_SESSION['status'] = 'error';
+            $_SESSION['message'] = 'Image could not be uploaded';
+            header("Location: " . $_SERVER['PHP_SELF'] . "?id=" . $id);
+            exit;
+        }
+    }
 
     if($name === '') {
         $_SESSION['status'] = 'error';
@@ -91,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             WHERE id=?";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssdii", $image, $name, $description, $price, $quantity, $id);
+    $stmt->bind_param("sssdii", $image_new_name, $name, $description, $price, $quantity, $id);
     
     if($stmt->execute()) { // REPLACED: Dapat ang `$stmt->execute()` ang suriin, hindi ang `$stmt` object mismo
         $_SESSION['status'] = 'success';
@@ -131,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $result === null) {
 ?>
 
 <!-- REPLACED: Siguraduhing ipasa ang id sa action URL para hindi mawala ang parameters -->
-<form action="<?php echo $_SERVER['PHP_SELF'] . '?id=' . $id; ?>" method="POST">
+<form action="<?php echo $_SERVER['PHP_SELF'] . '?id=' . $id; ?>" method="POST" enctype="multipart/form-data">
   <?php if($row = $result->fetch_assoc()) { ?>
   
   <!-- REPLACED: Ginawang hidden input ang ID upang maisama ito nang ligtas sa POST request nang hindi nakikita bilang text box -->
@@ -139,7 +181,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $result === null) {
   
   <label for="image">Image (URL/Path):</label><br>
   <!-- REPLACED: Idinagdag ang value ng image at gumamit ng htmlspecialchars para sa seguridad -->
-  <input type="text" id="image" name="image" value="<?= htmlspecialchars($row['image']?? '') ; ?>"><br><br>
+  <?php if($row['image'] === null || $row['image'] === '') {?>
+            <img 
+            id="image-preview"
+            width="50"
+            height="50"
+            src="<?= $image_path . 'product_placeholder.png' ?>" 
+            alt="Product Image"
+        >
+        <?php } else { ?>
+
+        <img 
+            id="image-preview"
+            width="50"
+            height="50"
+            src="<?= $image_path . htmlspecialchars($row['image'] ?? null) ?>" 
+            alt="Product Image"
+        >
+        <?php } ?>
+    <input type="file" id="image" name="image" accept=".jpg,.jpeg,.png" onchange="previewImage(event)"><br><br>
   
   <label for="name">Name:</label><br>
   <!-- REPLACED: Idinagdag ang 'echo' gamit ang shorthand na  -->
@@ -158,3 +218,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $result === null) {
   <input type="submit" value="Update Product">
   <?php  } ?>
 </form>
+
+<script>
+function previewImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        document.getElementById('image-preview').src = URL.createObjectURL(file);
+    }
+}
+</script>
