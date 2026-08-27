@@ -1,6 +1,7 @@
 <?php
 require_once('./db.php');
 require_once('./session.php');
+checkAuth();
 if($_SERVER['REQUEST_METHOD'] === 'GET') {
     
     $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?? null;

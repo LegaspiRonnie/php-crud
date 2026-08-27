@@ -1,6 +1,7 @@
 <?php
 require_once('./db.php');
 require_once('./session.php');
+checkAuth();
 
 /* 
    REPLACED: Binago ang pagkuha ng ID. 

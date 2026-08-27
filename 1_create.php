@@ -1,6 +1,7 @@
 <?php
 require_once('./db.php');
 require_once('./session.php');
+checkAuth();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name             = $_POST['name'] ?? '';

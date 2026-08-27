@@ -1,6 +1,7 @@
 <?php
-require_once('./db.php');
 require_once('./session.php');
+require_once('./db.php');
+checkAuth();
 $products = [];
 $escape = static fn($value): string => htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
 $image_path = 'uploads/images/';
@@ -18,7 +19,11 @@ if($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 ?>
 <p><?php require_once('./alert.php'); ?> </p>
+<p>Welcome back <?php echo $_SESSION['username']; ?></p>
 <button><a href="1_create.php">Add product</a></button>
+<form action="logout.php" method="POST" style="display: inline;">
+  <button type="submit" style="background-color: red;">Logout</button>
+</form>
 <table border='1'>
   <tr>
     <th>ID</th>
