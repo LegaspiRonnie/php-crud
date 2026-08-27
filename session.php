@@ -12,6 +12,14 @@ function checkAuth(): void {
         exit;
     }
 }
+function isAdmin(): void {
+    if (strtolower(trim((string)($_SESSION['role'] ?? ''))) !== 'admin') {
+        getStatus('error', "You don't have permission");
+        header('Location: landing_page.php');
+        exit;
+    }
+}
+
 
 function redirectIfAuthenticated(): void {
     if (!empty($_SESSION['username']) && !empty($_SESSION['email'])) {

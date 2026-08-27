@@ -2,6 +2,7 @@
 require_once('./session.php');
 require_once('./db.php');
 checkAuth();
+isAdmin();
 $products = [];
 $escape = static fn($value): string => htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
 $image_path = 'uploads/images/';

@@ -9,25 +9,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if($email === '' || $password === '') {
         getStatus('error', 'Email and password are required');
-        header('Location: index.php');
+        header('Location: login.php');
         exit;
     }
     
-    $sql = "SELECT username, email, password FROM php_crud_users WHERE email = ? LIMIT 1";
+    $sql = "SELECT username, email, password, role FROM php_crud_users WHERE email = ? LIMIT 1";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('s', $email);
     $stmt->execute();
     $user = $stmt->get_result()->fetch_assoc();
 
-    if(!password_verify($password, $user['password'])) {
+    if (!$user || !password_verify($password, $user['password'])) {
         getStatus('error', 'Email or Password is incorrect');
-        header('Location: index.php');
+        header('Location: login.php');
         exit;
     }
-    
-    getStatus('sccess', 'Login success');
+
+    getStatus('success', 'Login success');
     $_SESSION['username'] = $user['username'];
     $_SESSION['email'] = $user['email'];
+    $_SESSION['role'] = $user['role'];
     header('Location: index.php');
     exit;
     
