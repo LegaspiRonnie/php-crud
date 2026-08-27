@@ -1,10 +1,20 @@
 <?php
 require_once('./db.php');
-
+session_start();
 if($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = $_POST['id'];
-    
-
+    $id = $_POST['id'] ?? '';
+    if($id === '') {
+        $_SESSION['status'] = 'error';
+        $_SESSION['message'] = 'ID is required';
+        header('Location: index.php');
+        exit;
+    }
+    if(!is_numeric($id) || (int)$id < 0) {
+        $_SESSION['status'] = 'error';
+        $_SESSION['message'] = 'ID must be a valid positive number';
+        header('Location: index.php');
+        exit;
+    }
     //make query for getting all the data of all products
     $sql = "DELETE FROM php_crud_products WHERE id = ?";
     //prepare the query
@@ -12,12 +22,14 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
     //bind parameters
     $stmt->bind_param('i', $id);
     if($stmt->execute()) {
-        echo "product deleted successfully!";
+        $_SESSION['status'] = 'success';
+        $_SESSION['message'] = 'product deleted successfully!';
+        header('Location: index.php');
+        exit;
     } else {
-        echo "can't delete product";
+        $_SESSION['status'] = 'error';
+        $_SESSION['message'] = 'Cant delete product!';
+        header('Location: index.php');
         exit;
     }
-    exit;
-    
-
 }
